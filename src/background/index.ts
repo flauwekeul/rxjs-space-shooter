@@ -4,7 +4,7 @@ import { map, mergeMap, toArray } from 'rxjs/operators'
 import { SPEED, START_COUNT } from '../settings'
 import { Star } from './star'
 
-export const renderer = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => (stars: Star[]) => {
+export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, stars: Star[]) => {
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
