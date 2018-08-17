@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc -w"
+    "start": "parcel serve src/index.html"
   },
   "author": "Abbe Keultjes <flauwekeul@gmail.com> (http://abbekeultjes.nl/)",
   "license": "MIT",
   "devDependencies": {
+    "parcel-bundler": "1.9.7",
+    "tslint": "5.11.0",
     "typescript": "3.0.1"
   },
   "dependencies": {
