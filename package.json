@@ -4,8 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsc -w"
   },
   "author": "Abbe Keultjes <flauwekeul@gmail.com> (http://abbekeultjes.nl/)",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "3.0.1"
+  },
+  "dependencies": {
+    "rxjs": "6.2.2"
+  }
 }
