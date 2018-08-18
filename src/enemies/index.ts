@@ -1,12 +1,14 @@
 import { Observable } from 'rxjs'
 import { scan } from 'rxjs/operators'
 
+import { scoreSubject } from '../score'
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle, randomInterval$ } from '../shared/utils'
 
 export const MIN_SPAWN_FREQUENCY = 1000
 export const MAX_SPAWN_FREQUENCY = 2000
 export const START_Y = -30
+export const ENEMY_ESCAPE_PENALTY = -30
 
 export const createEnemies = (canvas: HTMLCanvasElement): Observable<Position[]> => {
     const isVisible = createIsVisible(canvas)
@@ -16,6 +18,13 @@ export const createEnemies = (canvas: HTMLCanvasElement): Observable<Position[]>
             .concat({
                 x: Math.floor(Math.random() * canvas.width),
                 y: START_Y,
+            })
+            .map(enemy => {
+                if (enemy.y >= canvas.height) {
+                    scoreSubject.next(ENEMY_ESCAPE_PENALTY)
+                }
+
+                return enemy
             })
             .filter(isVisible),
         [] as Position[]),

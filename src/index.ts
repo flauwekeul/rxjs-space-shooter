@@ -29,8 +29,9 @@ const enemies$ = fromEnemies.createEnemies(canvas).pipe(
 const enemieShots$ = fromEnemieShots.createEnemyShots(canvas, enemies$)
 const score$ = fromScore.score$
 
-const gameOver = (player: Position, enemies: Position[], enemyShots: Position[]) => {
-    return enemies.some(enemy => collision(player, enemy)) ||
+const gameOver = (player: Position, enemies: Position[], enemyShots: Position[], score: number) => {
+    return score < 0 ||
+        enemies.some(enemy => collision(player, enemy)) ||
         enemyShots.some(shot => collision(player, shot))
 }
 
@@ -55,7 +56,7 @@ combineLatest(
         enemyShots,
         score,
     })),
-    takeWhile(({ player, enemies, enemyShots }) => !gameOver(player, enemies, enemyShots)),
+    takeWhile(({ player, enemies, enemyShots, score }) => !gameOver(player, enemies, enemyShots, score)),
 ).subscribe(({ stars, player, enemies, playerShots, enemyShots, score }) => {
     fromBackground.render(ctx, canvas, stars)
     fromPlayer.render(ctx, player)
