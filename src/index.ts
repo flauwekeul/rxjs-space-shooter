@@ -21,6 +21,7 @@ const stars$ = fromBackground.createStars(canvas)
 const player$ = fromPlayer.createPlayer(canvas)
 const playerShots$ = fromPlayerShots.createPlayerShots(canvas, player$)
 const enemies$ = fromEnemies.createEnemies(canvas).pipe(
+    // share the stream so that createEnemyShots() uses the same enemies
     share(),
 )
 const enemieShots$ = fromEnemieShots.createEnemyShots(canvas, enemies$)

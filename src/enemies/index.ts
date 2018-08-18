@@ -1,17 +1,17 @@
-import { Observable, timer } from 'rxjs'
+import { Observable } from 'rxjs'
 import { scan } from 'rxjs/operators'
 
 import { Position } from '../shared/position'
-import { createIsVisible, drawTriangle } from '../shared/utils'
+import { createIsVisible, drawTriangle, randomInterval$ } from '../shared/utils'
 
-export const SPAWN_FREQUENCY = 1500
+export const MIN_SPAWN_FREQUENCY = 1000
+export const MAX_SPAWN_FREQUENCY = 2000
 export const START_Y = -30
 
 export const createEnemies = (canvas: HTMLCanvasElement): Observable<Position[]> => {
     const isVisible = createIsVisible(canvas)
 
-    // emit immediately, then every SPAWN_FREQUENCY
-    return timer(0, SPAWN_FREQUENCY).pipe(
+    return randomInterval$(MIN_SPAWN_FREQUENCY, MAX_SPAWN_FREQUENCY).pipe(
         scan(enemies => enemies
             .concat({
                 x: Math.floor(Math.random() * canvas.width),

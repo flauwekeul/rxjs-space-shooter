@@ -1,3 +1,5 @@
+import { of, timer } from 'rxjs'
+import { concatMap, repeat } from 'rxjs/operators'
 import { Position } from './position'
 
 export const drawTriangle = (
@@ -18,6 +20,11 @@ export const drawTriangle = (
 }
 
 export const randomNumber = (min = 0, max = 1) => Math.floor(Math.random() * (max - min + 1)) + min
+
+export const randomInterval$ = (min: number, max: number) => of(0).pipe(
+    concatMap(() => timer(randomNumber(min, max))),
+    repeat(),
+)
 
 export const createIsVisible = (canvas: HTMLCanvasElement) => (position: Position) => {
     return position.x > -40 &&
