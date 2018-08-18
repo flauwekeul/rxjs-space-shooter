@@ -1,5 +1,6 @@
 import { Position } from '../shared/position'
 
 export interface Star extends Position {
-    size: number
+    size: number,
+    color: string
 }
