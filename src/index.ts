@@ -1,5 +1,5 @@
 import { combineLatest } from 'rxjs'
-import { sampleTime, share, startWith } from 'rxjs/operators'
+import { map, sampleTime, share, startWith, takeWhile } from 'rxjs/operators'
 
 import * as fromBackground from './background'
 import * as fromEnemies from './enemies'
@@ -7,6 +7,7 @@ import * as fromEnemieShots from './enemies/shots'
 import * as fromPlayer from './player'
 import * as fromPlayerShots from './player/shots'
 import { Position } from './shared/position'
+import { collision } from './shared/utils'
 
 const GAME_SPEED = 40
 
@@ -26,6 +27,11 @@ const enemies$ = fromEnemies.createEnemies(canvas).pipe(
 )
 const enemieShots$ = fromEnemieShots.createEnemyShots(canvas, enemies$)
 
+const gameOver = (player: Position, enemies: Position[], enemyShots: Position[]) => {
+    return enemies.some(enemy => collision(player, enemy)) ||
+        enemyShots.some(shot => collision(player, shot))
+}
+
 combineLatest(
     stars$,
     player$,
@@ -37,10 +43,19 @@ combineLatest(
     enemieShots$,
 ).pipe(
     sampleTime(GAME_SPEED),
-).subscribe(([stars, player, enemies, playerShots, enemyShots]) => {
+    // map to object for more readable "picking" of actors
+    map(([stars, player, enemies, playerShots, enemyShots]) => ({
+        stars,
+        player,
+        enemies,
+        playerShots,
+        enemyShots,
+    })),
+    takeWhile(({ player, enemies, enemyShots }) => !gameOver(player, enemies, enemyShots)),
+).subscribe(({ stars, player, enemies, playerShots, enemyShots }) => {
     fromBackground.render(ctx, canvas, stars)
     fromPlayer.render(ctx, player)
     fromEnemies.render(ctx, enemies)
-    fromPlayerShots.render(ctx, playerShots)
+    fromPlayerShots.render(ctx, playerShots, enemies)
     fromEnemieShots.render(ctx, enemyShots)
 })

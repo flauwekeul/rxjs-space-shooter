@@ -29,10 +29,10 @@ export const createStars = (canvas: HTMLCanvasElement) => range(1, STAR_COUNT).p
 )
 
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, stars: Star[]) => {
-    ctx.fillStyle = '#000000'
+    ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = '#999'
     stars.forEach(star => {
         ctx.fillRect(star.x, star.y, star.size, star.size)
     })

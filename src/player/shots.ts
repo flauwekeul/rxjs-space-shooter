@@ -3,7 +3,7 @@ import { distinctUntilChanged, filter, map, scan, throttleTime, timestamp } from
 
 import { PLAYER_Y_FROM_BOTTOM } from '.'
 import { Position } from '../shared/position'
-import { drawTriangle } from '../shared/utils'
+import { collision, drawTriangle } from '../shared/utils'
 
 export const SHOOTING_SPEED = 15
 
@@ -29,8 +29,17 @@ export const createPlayerShots = (canvas: HTMLCanvasElement, player$: Observable
     }), [] as Position[]),
 )
 
-export const render = (ctx: CanvasRenderingContext2D, shots: Position[]) => {
+export const render = (ctx: CanvasRenderingContext2D, shots: Position[], enemies: Position[]) => {
     shots.forEach(shot => {
+        for (const enemy of enemies) {
+            if (collision(shot, enemy)) {
+                // put outside canvas, will be removed next tick
+                enemy.x = enemy.y = -100
+                shot.x = shot.y = -100
+                return
+            }
+        }
+
         shot.y -= SHOOTING_SPEED
         drawTriangle(ctx, shot.x, shot.y, 5, '#ffffcc', 'up')
     })

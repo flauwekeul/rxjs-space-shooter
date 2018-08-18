@@ -32,3 +32,11 @@ export const createIsVisible = (canvas: HTMLCanvasElement) => (position: Positio
         position.y > -40 &&
         position.y < canvas.height + 40
 }
+
+export const collision = (target1: Position, target2: Position) => {
+    ​return (
+        target1.x > target2.x - 20 &&
+        target1.x < target2.x + 20 &&
+        (target1.y > target2.y - 20 && target1.y < target2.y + 20)
+    )
+}
