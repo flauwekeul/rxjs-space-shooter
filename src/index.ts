@@ -1,8 +1,11 @@
 import { combineLatest } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { sampleTime } from 'rxjs/operators'
 
 import * as fromBackground from './background'
+import * as fromEnemies from './enemies'
 import * as fromPlayer from './player'
+
+const GAME_SPEED = 40
 
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -14,9 +17,11 @@ canvas.height = window.innerHeight
 combineLatest(
     fromBackground.createStars(canvas),
     fromPlayer.createPlayer(canvas),
+    fromEnemies.createEnemies(canvas),
 ).pipe(
-    map(([stars, playerPosition]) => ({ stars, playerPosition })),
-).subscribe(({ stars, playerPosition }) => {
+    sampleTime(GAME_SPEED),
+).subscribe(([stars, playerPosition, enemies]) => {
     fromBackground.render(ctx, canvas, stars)
     fromPlayer.render(ctx, playerPosition)
+    fromEnemies.render(ctx, enemies)
 })

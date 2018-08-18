@@ -1,8 +1,10 @@
 import { interval, range } from 'rxjs'
 import { map, mergeMap, toArray } from 'rxjs/operators'
 
-import { SPEED, START_COUNT } from '../settings'
 import { Star } from './star'
+
+export const STAR_COUNT = 250
+export const SPEED = 40
 
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, stars: Star[]) => {
     ctx.fillStyle = '#000000'
@@ -14,7 +16,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     })
 }
 
-export const createStars = (canvas: HTMLCanvasElement) => range(1, START_COUNT).pipe(
+export const createStars = (canvas: HTMLCanvasElement) => range(1, STAR_COUNT).pipe(
     map<number, Star>(() => ({
         x: Math.floor(Math.random() * canvas.width),
         y: Math.floor(Math.random() * canvas.height),
