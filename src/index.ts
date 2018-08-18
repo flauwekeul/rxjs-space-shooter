@@ -6,6 +6,7 @@ import * as fromEnemies from './enemies'
 import * as fromEnemieShots from './enemies/shots'
 import * as fromPlayer from './player'
 import * as fromPlayerShots from './player/shots'
+import * as fromScore from './score'
 import { Position } from './shared/position'
 import { collision } from './shared/utils'
 
@@ -26,6 +27,7 @@ const enemies$ = fromEnemies.createEnemies(canvas).pipe(
     share(),
 )
 const enemieShots$ = fromEnemieShots.createEnemyShots(canvas, enemies$)
+const score$ = fromScore.score$
 
 const gameOver = (player: Position, enemies: Position[], enemyShots: Position[]) => {
     return enemies.some(enemy => collision(player, enemy)) ||
@@ -41,21 +43,24 @@ combineLatest(
         startWith([{} as Position]),
     ),
     enemieShots$,
+    score$,
 ).pipe(
     sampleTime(GAME_SPEED),
     // map to object for more readable "picking" of actors
-    map(([stars, player, enemies, playerShots, enemyShots]) => ({
+    map(([stars, player, enemies, playerShots, enemyShots, score]) => ({
         stars,
         player,
         enemies,
         playerShots,
         enemyShots,
+        score,
     })),
     takeWhile(({ player, enemies, enemyShots }) => !gameOver(player, enemies, enemyShots)),
-).subscribe(({ stars, player, enemies, playerShots, enemyShots }) => {
+).subscribe(({ stars, player, enemies, playerShots, enemyShots, score }) => {
     fromBackground.render(ctx, canvas, stars)
     fromPlayer.render(ctx, player)
     fromEnemies.render(ctx, enemies)
     fromPlayerShots.render(ctx, playerShots, enemies)
     fromEnemieShots.render(ctx, enemyShots)
+    fromScore.render(ctx, score)
 })
