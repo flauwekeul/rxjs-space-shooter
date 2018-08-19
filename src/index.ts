@@ -1,14 +1,14 @@
 import { combineLatest } from 'rxjs'
-import { map, sampleTime, share, startWith, takeWhile } from 'rxjs/operators'
+import { finalize, map, sampleTime, share, startWith, takeWhile } from 'rxjs/operators'
 
 import * as fromBackground from './background'
 import * as fromEnemies from './enemies'
-import * as fromEnemieShots from './enemies/shots'
+import * as fromEnemyShots from './enemies/shots'
 import * as fromPlayer from './player'
 import * as fromPlayerShots from './player/shots'
-import * as fromScore from './score'
 import { Position } from './shared/position'
 import { collision } from './shared/utils'
+import * as fromUi from './ui'
 
 const GAME_SPEED = 40
 
@@ -21,13 +21,21 @@ canvas.height = window.innerHeight
 
 const stars$ = fromBackground.createStars(canvas)
 const player$ = fromPlayer.createPlayer(canvas)
-const playerShots$ = fromPlayerShots.createPlayerShots(canvas, player$)
+const playerShots$ = fromPlayerShots.createPlayerShots(canvas, player$).pipe(
+    // start with a fake shot or else combineLatest won't emit until the player shoots
+    startWith([{} as Position]),
+)
 const enemies$ = fromEnemies.createEnemies(canvas).pipe(
+    // start with a fake enemy so that the stream starts immediately
+    startWith([{} as Position]),
     // share the stream so that createEnemyShots() uses the same enemies
     share(),
 )
-const enemieShots$ = fromEnemieShots.createEnemyShots(canvas, enemies$)
-const score$ = fromScore.score$
+const enemyShots$ = fromEnemyShots.createEnemyShots(canvas, enemies$).pipe(
+    // start with a fake shot so that the stream starts immediately
+    startWith([{} as Position]),
+)
+const score$ = fromUi.score$
 
 const gameOver = (player: Position, enemies: Position[], enemyShots: Position[], score: number) => {
     return score < 0 ||
@@ -39,11 +47,8 @@ combineLatest(
     stars$,
     player$,
     enemies$,
-    playerShots$.pipe(
-        // start with a fake shot or else combineLatest won't emit
-        startWith([{} as Position]),
-    ),
-    enemieShots$,
+    playerShots$,
+    enemyShots$,
     score$,
 ).pipe(
     sampleTime(GAME_SPEED),
@@ -57,11 +62,17 @@ combineLatest(
         score,
     })),
     takeWhile(({ player, enemies, enemyShots, score }) => !gameOver(player, enemies, enemyShots, score)),
+    finalize(() => {
+        canvas.classList.remove('playing')
+        fromUi.renderMessage(ctx, 'GAME OVER')
+    }),
 ).subscribe(({ stars, player, enemies, playerShots, enemyShots, score }) => {
-    fromBackground.render(ctx, canvas, stars)
+    canvas.classList.add('playing')
+
+    fromBackground.render(ctx, stars)
     fromPlayer.render(ctx, player)
     fromEnemies.render(ctx, enemies)
     fromPlayerShots.render(ctx, playerShots, enemies)
-    fromEnemieShots.render(ctx, enemyShots)
-    fromScore.render(ctx, score)
+    fromEnemyShots.render(ctx, enemyShots)
+    fromUi.renderScore(ctx, score)
 })

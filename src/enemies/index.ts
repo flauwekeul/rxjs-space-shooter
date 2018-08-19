@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs'
 import { scan } from 'rxjs/operators'
 
-import { scoreSubject } from '../score'
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle, randomInterval$ } from '../shared/utils'
+import { scoreSubject } from '../ui/score'
 
 export const MIN_SPAWN_FREQUENCY = 1000
 export const MAX_SPAWN_FREQUENCY = 2000

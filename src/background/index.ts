@@ -33,7 +33,9 @@ export const createStars = (canvas: HTMLCanvasElement) => range(1, STAR_COUNT).p
     )),
 )
 
-export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, stars: Star[]) => {
+export const render = (ctx: CanvasRenderingContext2D, stars: Star[]) => {
+    const { canvas } = ctx
+
     ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 

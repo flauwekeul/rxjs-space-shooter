@@ -2,9 +2,9 @@ import { combineLatest, fromEvent, merge, Observable } from 'rxjs'
 import { distinctUntilChanged, filter, map, scan, throttleTime, timestamp } from 'rxjs/operators'
 
 import { PLAYER_Y_FROM_BOTTOM } from '.'
-import { scoreSubject } from '../score'
 import { Position } from '../shared/position'
 import { collision, drawTriangle } from '../shared/utils'
+import { scoreSubject } from '../ui/score'
 
 export const SHOOTING_SPEED = 15
 export const SCORE_INCREMENT = 10
