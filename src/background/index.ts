@@ -5,6 +5,8 @@ import { GAME_SPEED } from '..'
 import { randomNumber } from '../shared/utils'
 import { Star } from './star'
 
+export { Star }
+
 export const STAR_COUNT = 250
 
 const randomHex = (min = 0, max = 16) => randomNumber(min, max).toString(16)

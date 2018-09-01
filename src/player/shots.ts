@@ -2,7 +2,7 @@ import { combineLatest, fromEvent, merge, Observable } from 'rxjs'
 import { distinctUntilChanged, filter, map, scan, throttleTime, timestamp } from 'rxjs/operators'
 
 import { Position } from '../shared/position'
-import { collision, drawTriangle } from '../shared/utils'
+import { collision, drawTriangle, moveOutsideView } from '../shared/utils'
 import { scoreSubject } from '../ui/score'
 import * as fromPlayer from './'
 
@@ -36,9 +36,8 @@ export const render = (ctx: CanvasRenderingContext2D, shots: Position[], enemies
         for (const enemy of enemies) {
             if (collision(shot, enemy)) {
                 scoreSubject.next(SCORE_INCREMENT)
-                // put outside canvas, will be removed next tick
-                enemy.x = enemy.y = -100
-                shot.x = shot.y = -100
+                moveOutsideView(enemy)
+                moveOutsideView(shot)
                 break
             }
         }

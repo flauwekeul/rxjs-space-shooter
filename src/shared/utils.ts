@@ -40,3 +40,7 @@ export const collision = (target1: Position, target2: Position) => {
         (target1.y > target2.y - 20 && target1.y < target2.y + 20)
     )
 }
+
+export const moveOutsideView = (actor: Position) => {
+    actor.x = actor.y = -100
+}

@@ -1,5 +1,5 @@
 import { animationFrameScheduler, combineLatest } from 'rxjs'
-import { finalize, map, sampleTime, share, startWith, takeWhile } from 'rxjs/operators'
+import { finalize, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
 
 import * as fromBackground from './background'
 import * as fromEnemies from './enemies'
@@ -7,7 +7,7 @@ import * as fromEnemyShots from './enemies/shots'
 import * as fromPlayer from './player'
 import * as fromPlayerShots from './player/shots'
 import { Position } from './shared/position'
-import { collision } from './shared/utils'
+import { collision, moveOutsideView } from './shared/utils'
 import * as fromUi from './ui'
 
 export const GAME_SPEED = 40
@@ -19,6 +19,7 @@ document.body.appendChild(canvas)
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
+const health$ = fromUi.health$
 const score$ = fromUi.score$
 const stars$ = fromBackground.createStars(canvas)
 const player$ = fromPlayer.createPlayer(canvas)
@@ -37,36 +38,50 @@ const enemyShots$ = fromEnemyShots.createEnemyShots(canvas, enemies$).pipe(
     startWith([{} as Position]),
 )
 
-const gameOver = (player: Position, enemies: Position[], enemyShots: Position[], score: number) => {
-    return score < 0 ||
-        enemies.some(enemy => collision(player, enemy)) ||
-        enemyShots.some(shot => collision(player, shot))
+const gameOver = (score: number, health: number) => {
+    return score < 0 || health <= 0
 }
 
-combineLatest(
+const updateOnCollision = (actors: Position[], player: Position) => actors.forEach(actor => {
+    if (collision(actor, player)) {
+        moveOutsideView(actor)
+        fromUi.healthSubject.next(-1)
+    }
+})
+
+combineLatest<[
+    number,
+    number,
+    fromBackground.Star[],
+    Position,
+    Position[],
+    Position[],
+    Position[]
+]>(
+    score$,
+    health$,
     stars$,
     player$,
-    enemies$,
     playerShots$,
+    enemies$,
     enemyShots$,
-    score$,
 ).pipe(
     sampleTime(GAME_SPEED, animationFrameScheduler),
-    // map to object for more readable "picking" of actors
-    map(([stars, player, enemies, playerShots, enemyShots, score]) => ({
-        stars,
-        player,
-        enemies,
-        playerShots,
-        enemyShots,
-        score,
-    })),
-    takeWhile(({ player, enemies, enemyShots, score }) => !gameOver(player, enemies, enemyShots, score)),
+    tap(([, , , player, , enemies, enemyShots]) => {
+        updateOnCollision(enemies, player)
+        updateOnCollision(enemyShots, player)
+    }),
+    takeWhile(([score, health]) => !gameOver(score, health)),
     finalize(() => {
         canvas.classList.remove('playing')
+
+        // takeWhile() stops the stream before the view can be updated, so that's done 1 more time:
+        fromBackground.render(ctx, [])
+        fromUi.renderHealth(ctx, 0)
+        fromUi.renderScore(ctx, 0)
         fromUi.renderMessage(ctx, 'GAME OVER')
     }),
-).subscribe(({ stars, player, enemies, playerShots, enemyShots, score }) => {
+).subscribe(([score, health, stars, player, playerShots, enemies, enemyShots]) => {
     canvas.classList.add('playing')
 
     fromBackground.render(ctx, stars)
@@ -75,4 +90,5 @@ combineLatest(
     fromPlayerShots.render(ctx, playerShots, enemies)
     fromEnemyShots.render(ctx, enemyShots)
     fromUi.renderScore(ctx, score)
+    fromUi.renderHealth(ctx, health)
 })

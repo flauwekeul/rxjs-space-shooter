@@ -3,7 +3,7 @@ import { scan } from 'rxjs/operators'
 
 export const render = (ctx: CanvasRenderingContext2D, score: number) => {
     ctx.fillStyle = '#fff'
-    ctx.font = 'bold 4vmin sans-serif'
+    ctx.font = '4vmin sans-serif'
     ctx.textBaseline = 'middle'
     ctx.fillText(`Score: ${score}`, 20, 30)
 }
