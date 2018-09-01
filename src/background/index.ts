@@ -1,11 +1,11 @@
 import { range, timer } from 'rxjs'
 import { map, mergeMap, toArray } from 'rxjs/operators'
 
+import { GAME_SPEED } from '..'
 import { randomNumber } from '../shared/utils'
 import { Star } from './star'
 
 export const STAR_COUNT = 250
-export const SPEED = 40
 
 const randomHex = (min = 0, max = 16) => randomNumber(min, max).toString(16)
 const randomStarColor = () => `#${randomHex(9, 12)}${randomHex(9, 12)}${randomHex(9, 12)}`
@@ -18,7 +18,7 @@ export const createStars = (canvas: HTMLCanvasElement) => range(1, STAR_COUNT).p
         color: randomStarColor(),
     })),
     toArray(),
-    mergeMap(stars => timer(0, SPEED).pipe(
+    mergeMap(stars => timer(0, GAME_SPEED).pipe(
         map(() => stars.map(star => {
             if (star.y >= canvas.height) {
                 // reset star to top of screen

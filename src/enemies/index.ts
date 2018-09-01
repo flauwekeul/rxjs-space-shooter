@@ -6,7 +6,8 @@ import { createIsVisible, drawTriangle } from '../shared/utils'
 import { scoreSubject } from '../ui/score'
 
 export const START_Y = -30
-export const ENEMY_ESCAPE_PENALTY = -30
+export const ESCAPE_PENALTY = -30
+export const SPEED = 5
 
 export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<number>): Observable<Position[]> => {
     const isVisible = createIsVisible(canvas)
@@ -21,7 +22,7 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<numb
             })
             .map(enemy => {
                 if (enemy.y >= canvas.height) {
-                    scoreSubject.next(ENEMY_ESCAPE_PENALTY)
+                    scoreSubject.next(ESCAPE_PENALTY)
                 }
 
                 return enemy
@@ -33,7 +34,7 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<numb
 
 export const render = (ctx: CanvasRenderingContext2D, enemies: Position[]) => {
     enemies.forEach(enemy => {
-        enemy.y += 5
+        enemy.y += SPEED
         drawTriangle(ctx, enemy.x, enemy.y, 20, '#ff3333', 'down')
     })
 }

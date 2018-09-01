@@ -1,4 +1,4 @@
-import { combineLatest } from 'rxjs'
+import { animationFrameScheduler, combineLatest } from 'rxjs'
 import { finalize, map, sampleTime, share, startWith, takeWhile } from 'rxjs/operators'
 
 import * as fromBackground from './background'
@@ -10,7 +10,7 @@ import { Position } from './shared/position'
 import { collision } from './shared/utils'
 import * as fromUi from './ui'
 
-const GAME_SPEED = 40
+export const GAME_SPEED = 40
 
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -51,7 +51,7 @@ combineLatest(
     enemyShots$,
     score$,
 ).pipe(
-    sampleTime(GAME_SPEED),
+    sampleTime(GAME_SPEED, animationFrameScheduler),
     // map to object for more readable "picking" of actors
     map(([stars, player, enemies, playerShots, enemyShots, score]) => ({
         stars,
