@@ -3,18 +3,18 @@ import { scan, switchMap } from 'rxjs/operators'
 
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle } from '../shared/utils'
-import { scoreSubject } from '../ui/score'
+import { Score, scoreSubject } from '../ui/score'
 
 export const START_Y = -30
 export const ESCAPE_PENALTY = -30
 export const SPEED = 5
 
-export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<number>): Observable<Position[]> => {
+export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<Score>): Observable<Position[]> => {
     const isVisible = createIsVisible(canvas)
 
     return score$.pipe(
-        // the higher the score, the lower the spawn interval
-        switchMap(score => interval(2400000 / (score + 1600))),
+        // the higher the max score, the lower the spawn interval
+        switchMap(({ max }) => interval(1500000 / (max + 1000))),
         scan<number, Position[]>(enemies => enemies
             .concat({
                 x: Math.floor(Math.random() * canvas.width),

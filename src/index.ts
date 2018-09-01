@@ -39,8 +39,8 @@ const enemyShots$ = fromEnemyShots.createEnemyShots(canvas, enemies$).pipe(
     startWith([{} as Position]),
 )
 
-const gameOver = (score: number, health: number) => {
-    return score < 0 || health <= 0
+const gameOver = (currentScore: number, health: number) => {
+    return currentScore < 0 || health <= 0
 }
 
 const onPlayerHit = (actors: Position[], player: Position) => actors.forEach(actor => {
@@ -66,7 +66,7 @@ const onEnemyHit = (enemies: Position[], playerShots: Position[]) => {
 canvas.classList.add('playing')
 
 combineLatest<[
-    number,
+    fromUi.Score,
     number,
     fromBackground.Star[],
     Position,
@@ -83,7 +83,7 @@ combineLatest<[
     enemyShots$,
 ).pipe(
     sampleTime(GAME_SPEED, animationFrameScheduler),
-    takeWhile(([score, health]) => !gameOver(score, health)),
+    takeWhile(([{ current }, health]) => !gameOver(current, health)),
     tap(([score, health, stars, player, playerShots, enemies, enemyShots]) => {
         // this executes on each game tick
         onPlayerHit(enemies, player)
@@ -106,5 +106,9 @@ combineLatest<[
     fromBackground.render(ctx, stars)
     fromUi.renderHealth(ctx, 0)
     fromUi.renderScore(ctx, score)
-    fromUi.renderMessage(ctx, 'GAME OVER')
+    fromUi.renderMessage(
+        ctx,
+        { content: 'GAME OVER' },
+        { content: `Highest score: ${score.max}`, fontSize: Math.min(canvas.width, canvas.height) * 0.05 },
+    )
 })
