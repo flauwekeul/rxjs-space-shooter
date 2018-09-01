@@ -1,5 +1,5 @@
 import { animationFrameScheduler, combineLatest } from 'rxjs'
-import { finalize, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
+import { last, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
 
 import * as fromBackground from './background'
 import * as fromEnemies from './enemies'
@@ -11,6 +11,7 @@ import { collision, moveOutsideView } from './shared/utils'
 import * as fromUi from './ui'
 
 export const GAME_SPEED = 40
+export const SCORE_INCREMENT = 10
 
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -42,12 +43,27 @@ const gameOver = (score: number, health: number) => {
     return score < 0 || health <= 0
 }
 
-const updateOnCollision = (actors: Position[], player: Position) => actors.forEach(actor => {
+const onPlayerHit = (actors: Position[], player: Position) => actors.forEach(actor => {
     if (collision(actor, player)) {
-        moveOutsideView(actor)
         fromUi.healthSubject.next(-1)
+        moveOutsideView(actor)
     }
 })
+
+const onEnemyHit = (enemies: Position[], playerShots: Position[]) => {
+    for (const enemy of enemies) {
+        for (const shot of playerShots) {
+            if (collision(shot, enemy)) {
+                fromUi.scoreSubject.next(SCORE_INCREMENT)
+                moveOutsideView(enemy)
+                moveOutsideView(shot)
+                break
+            }
+        }
+    }
+}
+
+canvas.classList.add('playing')
 
 combineLatest<[
     number,
@@ -67,28 +83,28 @@ combineLatest<[
     enemyShots$,
 ).pipe(
     sampleTime(GAME_SPEED, animationFrameScheduler),
-    tap(([, , , player, , enemies, enemyShots]) => {
-        updateOnCollision(enemies, player)
-        updateOnCollision(enemyShots, player)
-    }),
     takeWhile(([score, health]) => !gameOver(score, health)),
-    finalize(() => {
-        canvas.classList.remove('playing')
+    tap(([score, health, stars, player, playerShots, enemies, enemyShots]) => {
+        // this executes on each game tick
+        onPlayerHit(enemies, player)
+        onPlayerHit(enemyShots, player)
+        onEnemyHit(enemies, playerShots)
 
-        // takeWhile() stops the stream before the view can be updated, so that's done 1 more time:
-        fromBackground.render(ctx, [])
-        fromUi.renderHealth(ctx, 0)
-        fromUi.renderScore(ctx, 0)
-        fromUi.renderMessage(ctx, 'GAME OVER')
+        fromBackground.render(ctx, stars)
+        fromPlayer.render(ctx, player)
+        fromPlayerShots.render(ctx, playerShots, enemies)
+        fromEnemies.render(ctx, enemies)
+        fromEnemyShots.render(ctx, enemyShots)
+        fromUi.renderScore(ctx, score)
+        fromUi.renderHealth(ctx, health)
     }),
-).subscribe(([score, health, stars, player, playerShots, enemies, enemyShots]) => {
-    canvas.classList.add('playing')
+    last(),
+).subscribe(([score, , stars]) => {
+    // this executes only once before completion
+    canvas.classList.remove('playing')
 
     fromBackground.render(ctx, stars)
-    fromPlayer.render(ctx, player)
-    fromEnemies.render(ctx, enemies)
-    fromPlayerShots.render(ctx, playerShots, enemies)
-    fromEnemyShots.render(ctx, enemyShots)
+    fromUi.renderHealth(ctx, 0)
     fromUi.renderScore(ctx, score)
-    fromUi.renderHealth(ctx, health)
+    fromUi.renderMessage(ctx, 'GAME OVER')
 })

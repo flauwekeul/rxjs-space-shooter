@@ -2,12 +2,10 @@ import { combineLatest, fromEvent, merge, Observable } from 'rxjs'
 import { distinctUntilChanged, filter, map, scan, throttleTime, timestamp } from 'rxjs/operators'
 
 import { Position } from '../shared/position'
-import { collision, drawTriangle, moveOutsideView } from '../shared/utils'
-import { scoreSubject } from '../ui/score'
+import { drawTriangle } from '../shared/utils'
 import * as fromPlayer from './'
 
 export const SPEED = 15
-export const SCORE_INCREMENT = 10
 
 const createShotEvents = (canvas: HTMLCanvasElement) => merge(
     fromEvent(canvas, 'click'),
@@ -33,15 +31,6 @@ export const createPlayerShots = (canvas: HTMLCanvasElement, player$: Observable
 
 export const render = (ctx: CanvasRenderingContext2D, shots: Position[], enemies: Position[]) => {
     for (const shot of shots) {
-        for (const enemy of enemies) {
-            if (collision(shot, enemy)) {
-                scoreSubject.next(SCORE_INCREMENT)
-                moveOutsideView(enemy)
-                moveOutsideView(shot)
-                break
-            }
-        }
-
         shot.y -= SPEED
         drawTriangle(ctx, shot.x, shot.y, 5, '#ffffcc', 'up')
     }
