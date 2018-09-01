@@ -3,8 +3,8 @@ import { scan, withLatestFrom } from 'rxjs/operators'
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle, randomInterval$, randomNumber } from '../shared/utils'
 
-export const MIN_SHOOTING_FREQUENCY = 500
-export const MAX_SHOOTING_FREQUENCY = 1000
+export const MIN_SHOOTING_FREQUENCY = 1000
+export const MAX_SHOOTING_FREQUENCY = 3000
 export const SHOOTING_SPEED = 10
 
 export const createEnemyShots = (canvas: HTMLCanvasElement, enemies$: Observable<Position[]>) => {

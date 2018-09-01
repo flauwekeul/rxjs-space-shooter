@@ -19,13 +19,14 @@ document.body.appendChild(canvas)
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
+const score$ = fromUi.score$
 const stars$ = fromBackground.createStars(canvas)
 const player$ = fromPlayer.createPlayer(canvas)
 const playerShots$ = fromPlayerShots.createPlayerShots(canvas, player$).pipe(
     // start with a fake shot or else combineLatest won't emit until the player shoots
     startWith([{} as Position]),
 )
-const enemies$ = fromEnemies.createEnemies(canvas).pipe(
+const enemies$ = fromEnemies.createEnemies(canvas, score$).pipe(
     // start with a fake enemy so that the stream starts immediately
     startWith([{} as Position]),
     // share the stream so that createEnemyShots() uses the same enemies
@@ -35,7 +36,6 @@ const enemyShots$ = fromEnemyShots.createEnemyShots(canvas, enemies$).pipe(
     // start with a fake shot so that the stream starts immediately
     startWith([{} as Position]),
 )
-const score$ = fromUi.score$
 
 const gameOver = (player: Position, enemies: Position[], enemyShots: Position[], score: number) => {
     return score < 0 ||
