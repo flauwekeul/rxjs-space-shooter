@@ -15,7 +15,7 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<numb
     return score$.pipe(
         // the higher the score, the lower the spawn interval
         switchMap(score => interval(2400000 / (score + 1600))),
-        scan(enemies => enemies
+        scan<number, Position[]>(enemies => enemies
             .concat({
                 x: Math.floor(Math.random() * canvas.width),
                 y: START_Y,
@@ -28,7 +28,7 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<numb
                 return enemy
             })
             .filter(isVisible),
-        [] as Position[]),
+        []),
     )
 }
 
