@@ -2,10 +2,8 @@ import { range, timer } from 'rxjs'
 import { map, mergeMap, toArray } from 'rxjs/operators'
 
 import { GAME_SPEED } from '..'
+import { Position } from '../shared/position'
 import { randomNumber } from '../shared/utils'
-import { Star } from './star'
-
-export { Star }
 
 export const STAR_COUNT = 250
 
@@ -45,4 +43,9 @@ export const render = (ctx: CanvasRenderingContext2D, stars: Star[]) => {
         ctx.fillStyle = star.color
         ctx.fillRect(star.x, star.y, star.size, star.size)
     })
+}
+
+export interface Star extends Position {
+    size: number,
+    color: string
 }

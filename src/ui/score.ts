@@ -10,7 +10,7 @@ export const render = (ctx: CanvasRenderingContext2D, { current }: Score) => {
 
 export const scoreSubject = new BehaviorSubject(0)
 
-export const score$ = scoreSubject.pipe(
+export const createScore = (initialScore: number) => scoreSubject.pipe(
     scan<number, Score>(({ current, max }, scoreDiff) => {
         const score = current + scoreDiff
 
@@ -18,7 +18,7 @@ export const score$ = scoreSubject.pipe(
             current: score,
             max: Math.max(score, max),
         }
-    }, { current: 0, max: 0 }),
+    }, { current: initialScore, max: initialScore }),
 )
 
 export interface Score {

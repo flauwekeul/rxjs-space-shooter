@@ -1,12 +1,12 @@
 import { interval, Observable } from 'rxjs'
 import { scan, switchMap } from 'rxjs/operators'
 
+import { SCORE_ENEMY_ESCAPES } from '..'
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle } from '../shared/utils'
 import { Score, scoreSubject } from '../ui/score'
 
 export const START_Y = -30
-export const ESCAPE_PENALTY = -30
 export const SPEED = 5
 
 export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<Score>): Observable<Position[]> => {
@@ -22,7 +22,7 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<Scor
             })
             .map(enemy => {
                 if (enemy.y >= canvas.height) {
-                    scoreSubject.next(ESCAPE_PENALTY)
+                    scoreSubject.next(SCORE_ENEMY_ESCAPES)
                 }
 
                 return enemy
