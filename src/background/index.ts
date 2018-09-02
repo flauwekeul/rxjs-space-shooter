@@ -1,7 +1,6 @@
-import { range, timer } from 'rxjs'
-import { map, mergeMap, toArray } from 'rxjs/operators'
+import { range } from 'rxjs'
+import { map, toArray } from 'rxjs/operators'
 
-import { GAME_SPEED } from '..'
 import { Position } from '../shared/position'
 import { randomNumber } from '../shared/utils'
 
@@ -18,19 +17,6 @@ export const createStars = (canvas: HTMLCanvasElement) => range(1, STAR_COUNT).p
         color: randomStarColor(),
     })),
     toArray(),
-    mergeMap(stars => timer(0, GAME_SPEED).pipe(
-        map(() => stars.map(star => {
-            if (star.y >= canvas.height) {
-                // reset star to top of screen
-                star.y = 0
-            }
-
-            // move star with a speed relative to its size
-            star.y += star.size
-
-            return star
-        })),
-    )),
 )
 
 export const render = (ctx: CanvasRenderingContext2D, stars: Star[]) => {
@@ -42,6 +28,14 @@ export const render = (ctx: CanvasRenderingContext2D, stars: Star[]) => {
     stars.forEach(star => {
         ctx.fillStyle = star.color
         ctx.fillRect(star.x, star.y, star.size, star.size)
+
+        // move star with a speed relative to its size
+        star.y += star.size
+
+        if (star.y >= canvas.height) {
+            // reset star to top of screen
+            star.y = 0
+        }
     })
 }
 

@@ -1,4 +1,6 @@
-import { animationFrameScheduler, combineLatest } from 'rxjs'
+// inspiration: https://manu.ninja/functional-reactive-game-programming-rxjs-breakout/
+
+import { animationFrameScheduler, combineLatest, interval } from 'rxjs'
 import { last, map, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
 
 import * as fromBackground from './background'
@@ -11,7 +13,7 @@ import { collision, moveOutsideView } from './shared/utils'
 import * as fromMessage from './ui/message'
 import * as fromScore from './ui/score'
 
-export const GAME_SPEED = 40 // ms per tick
+export const TICK_INTERVAL = 40 // ms per tick
 export const SCORE_INITIAL = 10
 export const SCORE_DESTROY_ENEMY = 10
 export const SCORE_ENEMY_ESCAPES = -25
@@ -25,6 +27,8 @@ const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 document.body.appendChild(canvas)
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
+
+const ticks$ = interval(TICK_INTERVAL, animationFrameScheduler)
 
 // actor creation
 const score$ = fromScore.createScore(SCORE_INITIAL)
@@ -104,6 +108,7 @@ const onStop = ({ score, stars }: Actors) => {
 canvas.classList.add('playing')
 
 combineLatest<actorsList>(
+    ticks$,
     score$,
     stars$,
     player$,
@@ -111,9 +116,9 @@ combineLatest<actorsList>(
     enemies$,
     enemyShots$,
 ).pipe(
-    sampleTime(GAME_SPEED, animationFrameScheduler),
+    sampleTime(TICK_INTERVAL, animationFrameScheduler),
     // map array to object to access actors by key name instead of by index
-    map<actorsList, Actors>(([score, stars, player, playerShots, enemies, enemyShots]) => ({
+    map<actorsList, Actors>(([, score, stars, player, playerShots, enemies, enemyShots]) => ({
         score, stars, player, playerShots, enemies, enemyShots,
     })),
     takeWhile(actors => !gameOver(actors)),
@@ -123,6 +128,7 @@ combineLatest<actorsList>(
 ).subscribe(onStop)
 
 type actorsList = [
+    number,
     fromScore.Score,
     fromBackground.Star[],
     Position,

@@ -1,5 +1,5 @@
 import { interval, Observable } from 'rxjs'
-import { concatMap, scan, take, tap } from 'rxjs/operators'
+import { concatMap, scan, take } from 'rxjs/operators'
 
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle } from '../shared/utils'
