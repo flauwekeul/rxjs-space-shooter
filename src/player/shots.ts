@@ -1,10 +1,8 @@
 import { combineLatest, fromEvent, merge, Observable } from 'rxjs'
-import { distinctUntilChanged, filter, map, scan, tap, throttleTime, timestamp } from 'rxjs/operators'
+import { distinctUntilChanged, filter, map, scan, throttleTime, timestamp } from 'rxjs/operators'
 
-import { SCORE_SHOOT } from '..'
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle } from '../shared/utils'
-import { scoreSubject } from '../ui/score'
 import * as fromPlayer from './'
 
 export const SPEED = 15
@@ -17,9 +15,6 @@ const createShotEvents = (canvas: HTMLCanvasElement) => merge(
 ).pipe(
     throttleTime(150),
     timestamp(),
-    tap(() => {
-        scoreSubject.next(SCORE_SHOOT)
-    }),
 )
 
 export const createPlayerShots = (canvas: HTMLCanvasElement, player$: Observable<Position>) => {

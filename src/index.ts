@@ -1,5 +1,5 @@
 import { animationFrameScheduler, combineLatest } from 'rxjs'
-import { last, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
+import { last, map, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
 
 import * as fromBackground from './background'
 import * as fromEnemies from './enemies'
@@ -26,10 +26,14 @@ document.body.appendChild(canvas)
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
+// actor creation
 const score$ = fromScore.createScore(SCORE_INITIAL)
 const stars$ = fromBackground.createStars(canvas)
 const player$ = fromPlayer.createPlayer(canvas)
 const playerShots$ = fromPlayerShots.createPlayerShots(canvas, player$).pipe(
+    tap(() => {
+        fromScore.scoreSubject.next(SCORE_SHOOT)
+    }),
     // start with a fake shot or else combineLatest won't emit until the player shoots
     startWith([{} as Position]),
 )
@@ -44,64 +48,47 @@ const enemyShots$ = fromEnemyShots.createEnemyShots(canvas, enemies$).pipe(
     startWith([{} as Position]),
 )
 
-const gameOver = (currentScore: number) => {
-    return currentScore <= 0
+const gameOver = ({ score }: Actors) => {
+    return score.current <= 0
 }
 
-const onPlayerHit = (actors: Position[], player: Position, scoreDiff: number) => actors.forEach(actor => {
-    if (collision(actor, player)) {
-        fromScore.scoreSubject.next(scoreDiff)
-        moveOutsideView(actor)
-    }
-})
+const onTick = ({ score, stars, player, playerShots, enemies, enemyShots }: Actors) => {
+    enemies.forEach(enemy => {
+        if (enemy.y >= canvas.height) {
+            fromScore.scoreSubject.next(SCORE_ENEMY_ESCAPES)
+            moveOutsideView(enemy)
+        }
 
-const onEnemyHit = (enemies: Position[], playerShots: Position[], scoreDiff: number) => {
-    for (const enemy of enemies) {
-        for (const shot of playerShots) {
+        if (collision(enemy, player)) {
+            fromScore.scoreSubject.next(SCORE_PLAYER_HIT_BY_ENEMY)
+            moveOutsideView(enemy)
+        }
+
+        playerShots.forEach(shot => {
             if (collision(shot, enemy)) {
-                fromScore.scoreSubject.next(scoreDiff)
+                fromScore.scoreSubject.next(SCORE_DESTROY_ENEMY)
                 moveOutsideView(enemy)
                 moveOutsideView(shot)
-                break
             }
+        })
+    })
+
+    enemyShots.forEach(shot => {
+        if (collision(shot, player)) {
+            fromScore.scoreSubject.next(SCORE_PLAYER_HIT_BY_SHOT)
+            moveOutsideView(shot)
         }
-    }
+    })
+
+    fromBackground.render(ctx, stars)
+    fromPlayer.render(ctx, player)
+    fromPlayerShots.render(ctx, playerShots, enemies)
+    fromEnemies.render(ctx, enemies)
+    fromEnemyShots.render(ctx, enemyShots)
+    fromScore.render(ctx, score)
 }
 
-canvas.classList.add('playing')
-
-combineLatest<[
-    fromScore.Score,
-    fromBackground.Star[],
-    Position,
-    Position[],
-    Position[],
-    Position[]
-]>(
-    score$,
-    stars$,
-    player$,
-    playerShots$,
-    enemies$,
-    enemyShots$,
-).pipe(
-    sampleTime(GAME_SPEED, animationFrameScheduler),
-    takeWhile(([{ current }]) => !gameOver(current)),
-    tap(([score, stars, player, playerShots, enemies, enemyShots]) => {
-        // this executes on each game tick
-        onPlayerHit(enemies, player, SCORE_PLAYER_HIT_BY_ENEMY)
-        onPlayerHit(enemyShots, player, SCORE_PLAYER_HIT_BY_SHOT)
-        onEnemyHit(enemies, playerShots, SCORE_DESTROY_ENEMY)
-
-        fromBackground.render(ctx, stars)
-        fromPlayer.render(ctx, player)
-        fromPlayerShots.render(ctx, playerShots, enemies)
-        fromEnemies.render(ctx, enemies)
-        fromEnemyShots.render(ctx, enemyShots)
-        fromScore.render(ctx, score)
-    }),
-    last(),
-).subscribe(([score, stars]) => {
+const onStop = ({ score, stars }: Actors) => {
     // this executes only once before completion
     canvas.classList.remove('playing')
 
@@ -112,4 +99,43 @@ combineLatest<[
         { content: 'GAME OVER' },
         { content: `Highest score: ${score.max}`, fontSize: Math.min(canvas.width, canvas.height) * 0.05 },
     )
-})
+}
+
+canvas.classList.add('playing')
+
+combineLatest<actorsList>(
+    score$,
+    stars$,
+    player$,
+    playerShots$,
+    enemies$,
+    enemyShots$,
+).pipe(
+    sampleTime(GAME_SPEED, animationFrameScheduler),
+    // map array to object to access actors by key name instead of by index
+    map<actorsList, Actors>(([score, stars, player, playerShots, enemies, enemyShots]) => ({
+        score, stars, player, playerShots, enemies, enemyShots,
+    })),
+    takeWhile(actors => !gameOver(actors)),
+    // this executes on each game tick
+    tap(onTick),
+    last(),
+).subscribe(onStop)
+
+type actorsList = [
+    fromScore.Score,
+    fromBackground.Star[],
+    Position,
+    Position[],
+    Position[],
+    Position[]
+]
+
+interface Actors {
+    score: fromScore.Score,
+    stars: fromBackground.Star[],
+    player: Position,
+    playerShots: Position[],
+    enemies: Position[],
+    enemyShots: Position[]
+}

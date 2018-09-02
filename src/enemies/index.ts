@@ -1,10 +1,9 @@
 import { interval, Observable } from 'rxjs'
-import { scan, switchMap } from 'rxjs/operators'
+import { concatMap, scan, take, tap } from 'rxjs/operators'
 
-import { SCORE_ENEMY_ESCAPES } from '..'
 import { Position } from '../shared/position'
 import { createIsVisible, drawTriangle } from '../shared/utils'
-import { Score, scoreSubject } from '../ui/score'
+import { Score } from '../ui/score'
 
 export const START_Y = -30
 export const SPEED = 5
@@ -14,18 +13,14 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<Scor
 
     return score$.pipe(
         // the higher the max score, the lower the spawn interval
-        switchMap(({ max }) => interval(1500000 / (max + 1000))),
+        // this is a bit brittle: the interval is only created when score$ emits
+        concatMap(({ max }) => interval(750000 / (max + 500)).pipe(
+            take(1),
+        )),
         scan<number, Position[]>(enemies => enemies
             .concat({
                 x: Math.floor(Math.random() * canvas.width),
                 y: START_Y,
-            })
-            .map(enemy => {
-                if (enemy.y >= canvas.height) {
-                    scoreSubject.next(SCORE_ENEMY_ESCAPES)
-                }
-
-                return enemy
             })
             .filter(isVisible),
         []),
