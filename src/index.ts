@@ -1,5 +1,3 @@
-// inspiration: https://manu.ninja/functional-reactive-game-programming-rxjs-breakout/
-
 import { animationFrameScheduler, combineLatest, interval } from 'rxjs'
 import { last, map, sampleTime, share, startWith, takeWhile, tap } from 'rxjs/operators'
 
@@ -118,7 +116,7 @@ combineLatest<actorsList>(
 ).pipe(
     sampleTime(TICK_INTERVAL, animationFrameScheduler),
     // map array to object to access actors by key name instead of by index
-    map<actorsList, Actors>(([, score, stars, player, playerShots, enemies, enemyShots]) => ({
+    map(([, score, stars, player, playerShots, enemies, enemyShots]) => ({
         score, stars, player, playerShots, enemies, enemyShots,
     })),
     takeWhile(actors => !gameOver(actors)),

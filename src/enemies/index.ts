@@ -12,11 +12,16 @@ export const createEnemies = (canvas: HTMLCanvasElement, score$: Observable<Scor
     const isVisible = createIsVisible(canvas)
 
     return score$.pipe(
-        // the higher the max score, the lower the spawn interval
-        // this is a bit brittle: the interval is only created when score$ emits
-        concatMap(({ max }) => interval(750000 / (max + 500)).pipe(
-            take(1),
-        )),
+        /**
+         * the higher the *max* score, the faster enemies spawn
+         * this is a bit brittle: the interval is only created when score$ emits
+         * the interval is:
+         * - 1500ms for score 0
+         * - 1000ms for score 250
+         * - 500ms  for score 1000
+         * - approaching 0ms
+         */
+        concatMap(({ max }) => interval(1 / (max + 500) * 750000).pipe(take(1))),
         scan<number, Position[]>(enemies => enemies
             .concat({
                 x: Math.floor(Math.random() * canvas.width),

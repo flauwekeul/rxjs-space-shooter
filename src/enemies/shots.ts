@@ -1,18 +1,25 @@
-import { Observable } from 'rxjs'
-import { scan, withLatestFrom } from 'rxjs/operators'
+import { interval, Observable } from 'rxjs'
+import { concatMap, scan, take, withLatestFrom } from 'rxjs/operators'
 
 import { Position } from '../shared/position'
-import { createIsVisible, drawTriangle, randomInterval$, randomNumber } from '../shared/utils'
+import { createIsVisible, drawTriangle, randomNumber } from '../shared/utils'
 import * as fromEnemies from './'
 
-export const MIN_SHOOTING_FREQUENCY = 1000
-export const MAX_SHOOTING_FREQUENCY = 3000
 export const SPEED = fromEnemies.SPEED * 2
 
 export const createEnemyShots = (canvas: HTMLCanvasElement, enemies$: Observable<Position[]>) => {
     const isVisible = createIsVisible(canvas)
 
-    return randomInterval$(MIN_SHOOTING_FREQUENCY, MAX_SHOOTING_FREQUENCY).pipe(
+    return enemies$.pipe(
+        /**
+         * the more enemies, the faster they'll shoot
+         * the interval is:
+         * - 3000ms for 1 enemy
+         * - 2000ms for 3 enemies
+         * - 1500ms for 7 enemies
+         * - approaching 1000ms
+         */
+        concatMap(enemies => interval(1 / (enemies.length + 1) * 4000 + 1000).pipe(take(1))),
         withLatestFrom(enemies$),
         scan<[number, Position[]], Position[]>((shots, [, enemies]) => {
             const { x, y } = enemies[randomNumber(0, enemies.length - 1)]
