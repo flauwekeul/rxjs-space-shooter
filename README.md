@@ -1,16 +1,17 @@
 # RxJS Space Shooter
 
+### 🚀 [abbekeultjes.nl/rxjs-space-shooter](http://abbekeultjes.nl/rxjs-space-shooter)
+
+## Credits
+
 In the excellent book [Reactive Programming with RxJS 5](https://pragprog.com/book/smreactjs5/reactive-programming-with-rxjs-5) the author Sergi Mansilla explains how to make a spaceship game where the player shoots enemies flying in from the top of the screen.
 
 This project continues where he left off and is solely for learning purposes.
 
-## Installation
+## Development
+
 ```
 npm i
-```
-
-## Play
-```
 npm start
 ```
 
