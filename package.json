@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel serve src/index.html"
+    "start": "parcel serve src/index.html",
+    "build": "parcel build src/index.html --public-url /rxjs-space-shooter/ --out-dir ./"
   },
   "author": "Abbe Keultjes <flauwekeul@gmail.com> (http://abbekeultjes.nl/)",
   "license": "MIT",
